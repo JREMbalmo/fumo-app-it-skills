@@ -3,38 +3,34 @@
 import { useEffect, useRef, useState } from "react";
 
 const galleryItems = [
-  { label: "Commission #1", bg: "#FFCAD4", accent: "#9D8189" },
-  { label: "Commission #2", bg: "#F4ACB7", accent: "#ffffff" },
-  { label: "Commission #3", bg: "#D8E2DC", accent: "#9D8189" },
-  { label: "Commission #4", bg: "#9D8189", accent: "#FFCAD4" },
-  { label: "Commission #5", bg: "#FFCAD4", accent: "#9D8189" },
-  { label: "Commission #6", bg: "#F4ACB7", accent: "#ffffff" },
+  { src: "/images/past-works/custom1.jpg", label: "Custom Commission #1" },
+  { src: "/images/past-works/custom2.jpg", label: "Custom Commission #2" },
 ];
 
 export default function GallerySection() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [direction, setDirection] = useState<"in" | "out">("in");
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [slideDir, setSlideDir] = useState<"enter" | "exit">("enter");
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goToNext = () => {
     if (animating) return;
     setAnimating(true);
-    setDirection("out");
+    setSlideDir("exit");
 
     setTimeout(() => {
       setCurrent((prev) => (prev + 1) % galleryItems.length);
-      setDirection("in");
+      setSlideDir("enter");
       setTimeout(() => {
         setAnimating(false);
       }, 500);
-    }, 400);
+    }, 450);
   };
 
   useEffect(() => {
-    timeoutRef.current = setInterval(goToNext, 4000);
+    intervalRef.current = setInterval(goToNext, 4500);
     return () => {
-      if (timeoutRef.current) clearInterval(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
@@ -59,48 +55,39 @@ export default function GallerySection() {
           style={{ backgroundColor: "#F4ACB7" }}
         />
 
-        <div className="relative flex items-center gap-6">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg" style={{ height: "480px" }}>
           <div
-            className="flex-1 rounded-2xl overflow-hidden shadow-lg"
-            style={{ height: "420px" }}
+            className="w-full h-full transition-all duration-500"
+            style={{
+              backgroundImage: `url(${item.src})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              transform: animating
+                ? slideDir === "exit"
+                  ? "translateX(-100%)"
+                  : "translateX(100%)"
+                : "translateX(0%)",
+              opacity: animating ? 0 : 1,
+            }}
+          />
+
+          <div
+            className="absolute bottom-0 left-0 right-0 px-6 pb-5 pt-16"
+            style={{
+              background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)",
+            }}
           >
-            <div
-              className="w-full h-full flex flex-col items-center justify-center transition-all duration-500"
-              style={{
-                backgroundColor: item.bg,
-                transform: animating
-                  ? direction === "out"
-                    ? "translateX(-100%)"
-                    : "translateX(100%)"
-                  : "translateX(0%)",
-                opacity: animating ? 0 : 1,
-              }}
-            >
-              <div
-                className="w-32 h-32 rounded-full mb-6 flex items-center justify-center text-5xl"
-                style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
-              >
-                🧸
-              </div>
-              <p
-                className="text-xl font-semibold"
-                style={{ color: item.accent }}
-              >
-                {item.label}
-              </p>
-              <p
-                className="text-sm mt-2 opacity-80"
-                style={{ color: item.accent }}
-              >
-                Replace with your work photo
-              </p>
-            </div>
+            <p className="text-white font-semibold text-lg">{item.label}</p>
           </div>
 
           <button
-            onClick={goToNext}
-            style={{ backgroundColor: "#F4ACB7", color: "#FFFFFF" }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow hover:opacity-80 transition-opacity text-lg font-bold"
+            onClick={() => {
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              goToNext();
+              intervalRef.current = setInterval(goToNext, 4500);
+            }}
+            style={{ backgroundColor: "rgba(157,129,137,0.85)" }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl hover:opacity-90 transition-opacity shadow"
             aria-label="Next"
           >
             ›
@@ -113,19 +100,20 @@ export default function GallerySection() {
               key={i}
               onClick={() => {
                 if (animating || i === current) return;
+                if (intervalRef.current) clearInterval(intervalRef.current);
                 setAnimating(true);
-                setDirection("out");
+                setSlideDir("exit");
                 setTimeout(() => {
                   setCurrent(i);
-                  setDirection("in");
-                  setTimeout(() => setAnimating(false), 500);
-                }, 400);
+                  setSlideDir("enter");
+                  setTimeout(() => {
+                    setAnimating(false);
+                    intervalRef.current = setInterval(goToNext, 4500);
+                  }, 500);
+                }, 450);
               }}
               className="w-2 h-2 rounded-full transition-all"
-              style={{
-                backgroundColor:
-                  i === current ? "#9D8189" : "#F4ACB7",
-              }}
+              style={{ backgroundColor: i === current ? "#9D8189" : "#F4ACB7" }}
               aria-label={`Go to item ${i + 1}`}
             />
           ))}

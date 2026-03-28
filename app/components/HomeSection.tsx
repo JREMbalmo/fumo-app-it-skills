@@ -4,18 +4,15 @@ import { useEffect, useState } from "react";
 
 const slides = [
   {
-    type: "image",
-    src: "/images/fumo_homepage.jpg",
+    src: "/images/homepage/fumo_homepage1.jpg",
     caption: "Handcrafted with love — your custom plush awaits",
   },
   {
-    type: "gradient",
-    gradient: "linear-gradient(135deg, #FFCAD4 0%, #F4ACB7 100%)",
+    src: "/images/homepage/fumo_homepage2.jpg",
     caption: "Each piece uniquely made just for you",
   },
   {
-    type: "gradient",
-    gradient: "linear-gradient(135deg, #D8E2DC 0%, #FFCAD4 100%)",
+    src: "/images/homepage/fumo_homepage3.jpg",
     caption: "Premium quality materials, endless possibilities",
   },
 ];
@@ -44,21 +41,16 @@ export default function HomeSection() {
           className="absolute inset-0 transition-opacity duration-700"
           style={{
             opacity: fading ? 0 : 1,
-            ...(slide.type === "image"
-              ? {
-                  backgroundImage: `url(${slide.src})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }
-              : { background: slide.gradient }),
+            backgroundImage: `url(${slide.src})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         />
 
         <div
           className="absolute bottom-0 left-0 right-0 px-8 pb-8 pt-20"
           style={{
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
+            background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
           }}
         >
           <p
