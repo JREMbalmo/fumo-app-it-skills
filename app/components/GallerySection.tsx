@@ -7,26 +7,33 @@ const galleryItems = [
   { src: "/images/past-works/custom2.jpg", label: "Custom Commission #2" },
 ];
 
+type Direction = "forward" | "backward";
+
 export default function GallerySection() {
   const [current, setCurrent] = useState(0);
-  const [nextIdx, setNextIdx] = useState<number | null>(null);
   const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
+  const [direction, setDirection] = useState<Direction>("forward");
   const currentRef = useRef(0);
   const busyRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const advance = (to?: number) => {
+  const advance = (to?: number, dir: Direction = "forward") => {
     if (busyRef.current) return;
     busyRef.current = true;
 
-    const nextIndex = to !== undefined ? to : (currentRef.current + 1) % galleryItems.length;
-    setNextIdx(nextIndex);
+    const nextIndex =
+      to !== undefined
+        ? to
+        : dir === "forward"
+        ? (currentRef.current + 1) % galleryItems.length
+        : (currentRef.current - 1 + galleryItems.length) % galleryItems.length;
+
+    setDirection(dir);
     setPhase("exit");
 
     setTimeout(() => {
       currentRef.current = nextIndex;
       setCurrent(nextIndex);
-      setNextIdx(null);
       setPhase("enter");
 
       requestAnimationFrame(() => {
@@ -38,6 +45,11 @@ export default function GallerySection() {
     }, 450);
   };
 
+  const resetInterval = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => advance(), 4500);
+  };
+
   useEffect(() => {
     intervalRef.current = setInterval(() => advance(), 4500);
     return () => {
@@ -45,20 +57,39 @@ export default function GallerySection() {
     };
   }, []);
 
+  const handleNext = () => { resetInterval(); advance(undefined, "forward"); };
+  const handlePrev = () => { resetInterval(); advance(undefined, "backward"); };
+
   const handleDotClick = (i: number) => {
     if (i === currentRef.current) return;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    advance(i);
-    intervalRef.current = setInterval(() => advance(), 4500);
+    const dir = i > currentRef.current ? "forward" : "backward";
+    resetInterval();
+    advance(i, dir);
   };
 
-  const handleArrow = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    advance();
-    intervalRef.current = setInterval(() => advance(), 4500);
-  };
+  const exitTransform =
+    direction === "forward" ? "translateX(-100%)" : "translateX(100%)";
+  const enterTransform =
+    direction === "forward" ? "translateX(100%)" : "translateX(-100%)";
 
   const currentItem = galleryItems[current];
+
+  const arrowBtnStyle: React.CSSProperties = {
+    backgroundColor: "rgba(157,129,137,0.85)",
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 40,
+    height: 40,
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#fff",
+    border: "none",
+    cursor: "pointer",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+  };
 
   return (
     <section
@@ -88,9 +119,9 @@ export default function GallerySection() {
               backgroundPosition: "center",
               transform:
                 phase === "exit"
-                  ? "translateX(-100%)"
+                  ? exitTransform
                   : phase === "enter"
-                  ? "translateX(100%)"
+                  ? enterTransform
                   : "translateX(0%)",
               opacity: phase === "idle" ? 1 : 0,
               transition:
@@ -111,13 +142,16 @@ export default function GallerySection() {
             <p className="text-white font-semibold text-lg">{currentItem.label}</p>
           </div>
 
-          <button
-            onClick={handleArrow}
-            style={{ backgroundColor: "rgba(157,129,137,0.85)" }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl hover:opacity-90 shadow"
-            aria-label="Next"
-          >
-            ›
+          <button onClick={handlePrev} style={{ ...arrowBtnStyle, left: 16 }} aria-label="Previous">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <button onClick={handleNext} style={{ ...arrowBtnStyle, right: 16 }} aria-label="Next">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </button>
         </div>
 

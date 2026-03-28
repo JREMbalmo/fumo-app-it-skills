@@ -1,5 +1,7 @@
 "use client";
 
+const SITE_NAME = "Fumo Commissions";
+
 const navLinks = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
@@ -27,7 +29,7 @@ export default function Header() {
           style={{ color: "#9D8189" }}
           className="text-xl font-bold tracking-wide"
         >
-          Fumo Commissions
+          {SITE_NAME}
         </span>
         <nav className="flex gap-8">
           {navLinks.map((link) => (
