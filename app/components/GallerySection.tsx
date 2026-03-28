@@ -9,32 +9,56 @@ const galleryItems = [
 
 export default function GallerySection() {
   const [current, setCurrent] = useState(0);
-  const [animating, setAnimating] = useState(false);
-  const [slideDir, setSlideDir] = useState<"enter" | "exit">("enter");
+  const [nextIdx, setNextIdx] = useState<number | null>(null);
+  const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
+  const currentRef = useRef(0);
+  const busyRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const goToNext = () => {
-    if (animating) return;
-    setAnimating(true);
-    setSlideDir("exit");
+  const advance = (to?: number) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+
+    const nextIndex = to !== undefined ? to : (currentRef.current + 1) % galleryItems.length;
+    setNextIdx(nextIndex);
+    setPhase("exit");
 
     setTimeout(() => {
-      setCurrent((prev) => (prev + 1) % galleryItems.length);
-      setSlideDir("enter");
-      setTimeout(() => {
-        setAnimating(false);
-      }, 500);
+      currentRef.current = nextIndex;
+      setCurrent(nextIndex);
+      setNextIdx(null);
+      setPhase("enter");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setPhase("idle");
+          busyRef.current = false;
+        });
+      });
     }, 450);
   };
 
   useEffect(() => {
-    intervalRef.current = setInterval(goToNext, 4500);
+    intervalRef.current = setInterval(() => advance(), 4500);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
-  const item = galleryItems[current];
+  const handleDotClick = (i: number) => {
+    if (i === currentRef.current) return;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    advance(i);
+    intervalRef.current = setInterval(() => advance(), 4500);
+  };
+
+  const handleArrow = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    advance();
+    intervalRef.current = setInterval(() => advance(), 4500);
+  };
+
+  const currentItem = galleryItems[current];
 
   return (
     <section
@@ -57,17 +81,24 @@ export default function GallerySection() {
 
         <div className="relative overflow-hidden rounded-2xl shadow-lg" style={{ height: "480px" }}>
           <div
-            className="w-full h-full transition-all duration-500"
+            className="w-full h-full"
             style={{
-              backgroundImage: `url(${item.src})`,
+              backgroundImage: `url(${currentItem.src})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              transform: animating
-                ? slideDir === "exit"
+              transform:
+                phase === "exit"
                   ? "translateX(-100%)"
-                  : "translateX(100%)"
-                : "translateX(0%)",
-              opacity: animating ? 0 : 1,
+                  : phase === "enter"
+                  ? "translateX(100%)"
+                  : "translateX(0%)",
+              opacity: phase === "idle" ? 1 : 0,
+              transition:
+                phase === "exit"
+                  ? "transform 450ms ease-in-out, opacity 300ms ease-in"
+                  : phase === "idle"
+                  ? "opacity 300ms ease-out"
+                  : "none",
             }}
           />
 
@@ -77,17 +108,13 @@ export default function GallerySection() {
               background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)",
             }}
           >
-            <p className="text-white font-semibold text-lg">{item.label}</p>
+            <p className="text-white font-semibold text-lg">{currentItem.label}</p>
           </div>
 
           <button
-            onClick={() => {
-              if (intervalRef.current) clearInterval(intervalRef.current);
-              goToNext();
-              intervalRef.current = setInterval(goToNext, 4500);
-            }}
+            onClick={handleArrow}
             style={{ backgroundColor: "rgba(157,129,137,0.85)" }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl hover:opacity-90 transition-opacity shadow"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl hover:opacity-90 shadow"
             aria-label="Next"
           >
             ›
@@ -98,22 +125,12 @@ export default function GallerySection() {
           {galleryItems.map((_, i) => (
             <button
               key={i}
-              onClick={() => {
-                if (animating || i === current) return;
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                setAnimating(true);
-                setSlideDir("exit");
-                setTimeout(() => {
-                  setCurrent(i);
-                  setSlideDir("enter");
-                  setTimeout(() => {
-                    setAnimating(false);
-                    intervalRef.current = setInterval(goToNext, 4500);
-                  }, 500);
-                }, 450);
+              onClick={() => handleDotClick(i)}
+              className="w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: i === current ? "#9D8189" : "#F4ACB7",
+                transition: "background-color 300ms",
               }}
-              className="w-2 h-2 rounded-full transition-all"
-              style={{ backgroundColor: i === current ? "#9D8189" : "#F4ACB7" }}
               aria-label={`Go to item ${i + 1}`}
             />
           ))}

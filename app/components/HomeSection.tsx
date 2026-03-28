@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const slides = [
   {
@@ -19,33 +19,75 @@ const slides = [
 
 export default function HomeSection() {
   const [current, setCurrent] = useState(0);
-  const [fading, setFading] = useState(false);
+  const [next, setNext] = useState<number | null>(null);
+  const [crossfading, setCrossfading] = useState(false);
+  const currentRef = useRef(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFading(true);
+      const nextIndex = (currentRef.current + 1) % slides.length;
+      setNext(nextIndex);
+      setCrossfading(false);
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setCrossfading(true);
+        });
+      });
+
       setTimeout(() => {
-        setCurrent((prev) => (prev + 1) % slides.length);
-        setFading(false);
-      }, 800);
+        currentRef.current = nextIndex;
+        setCurrent(nextIndex);
+        setNext(null);
+        setCrossfading(false);
+      }, 900);
     }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
-  const slide = slides[current];
+  const goTo = (i: number) => {
+    if (i === currentRef.current) return;
+    const nextIndex = i;
+    setNext(nextIndex);
+    setCrossfading(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCrossfading(true);
+      });
+    });
+    setTimeout(() => {
+      currentRef.current = nextIndex;
+      setCurrent(nextIndex);
+      setNext(null);
+      setCrossfading(false);
+    }, 900);
+  };
 
   return (
     <section id="home" className="pt-16">
       <div className="relative w-full overflow-hidden" style={{ height: "66.666vh" }}>
         <div
-          className="absolute inset-0 transition-opacity duration-700"
+          className="absolute inset-0"
           style={{
-            opacity: fading ? 0 : 1,
-            backgroundImage: `url(${slide.src})`,
+            backgroundImage: `url(${slides[current].src})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         />
+
+        {next !== null && (
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${slides[next].src})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: crossfading ? 1 : 0,
+              transition: "opacity 800ms ease-in-out",
+            }}
+          />
+        )}
 
         <div
           className="absolute bottom-0 left-0 right-0 px-8 pb-8 pt-20"
@@ -53,11 +95,8 @@ export default function HomeSection() {
             background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
           }}
         >
-          <p
-            className="text-white text-lg font-medium max-w-md drop-shadow-md transition-opacity duration-700"
-            style={{ opacity: fading ? 0 : 1 }}
-          >
-            {slide.caption}
+          <p className="text-white text-lg font-medium max-w-md drop-shadow-md">
+            {next !== null && crossfading ? slides[next].caption : slides[current].caption}
           </p>
         </div>
 
@@ -65,16 +104,14 @@ export default function HomeSection() {
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => {
-                setFading(true);
-                setTimeout(() => {
-                  setCurrent(i);
-                  setFading(false);
-                }, 400);
-              }}
-              className="w-2 h-2 rounded-full transition-all"
+              onClick={() => goTo(i)}
+              className="w-2 h-2 rounded-full"
               style={{
-                backgroundColor: i === current ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+                backgroundColor:
+                  i === (next !== null ? next : current)
+                    ? "#FFFFFF"
+                    : "rgba(255,255,255,0.5)",
+                transition: "background-color 300ms",
               }}
               aria-label={`Go to slide ${i + 1}`}
             />
