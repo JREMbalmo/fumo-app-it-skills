@@ -9,6 +9,14 @@ function DiscordIcon() {
   );
 }
 
+function EmailIcon() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
+    </svg>
+  );
+}
+
 export default function ContactSection() {
   return (
     <section
@@ -57,7 +65,9 @@ export default function ContactSection() {
             className="flex-1 rounded-2xl p-8 flex flex-col items-center gap-4"
             style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
           >
-            <span className="text-4xl">✉️</span>
+            <span style={{ color: "#FFFFFF" }}>
+              <EmailIcon />
+            </span>
             <h3 className="text-lg font-semibold" style={{ color: "#FFFFFF" }}>
               Email
             </h3>

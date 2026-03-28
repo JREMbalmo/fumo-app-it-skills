@@ -2,14 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const galleryItems = [
-  { src: "/images/past-works/custom1.jpg", label: "Custom Commission #1" },
-  { src: "/images/past-works/custom2.jpg", label: "Custom Commission #2" },
-];
+interface GalleryItem {
+  src: string;
+  label: string;
+}
+
+interface Props {
+  items: GalleryItem[];
+}
 
 type Direction = "forward" | "backward";
 
-export default function GallerySection() {
+export default function GallerySection({ items }: Props) {
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
   const [direction, setDirection] = useState<Direction>("forward");
@@ -18,15 +22,15 @@ export default function GallerySection() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const advance = (to?: number, dir: Direction = "forward") => {
-    if (busyRef.current) return;
+    if (busyRef.current || items.length <= 1) return;
     busyRef.current = true;
 
     const nextIndex =
       to !== undefined
         ? to
         : dir === "forward"
-        ? (currentRef.current + 1) % galleryItems.length
-        : (currentRef.current - 1 + galleryItems.length) % galleryItems.length;
+        ? (currentRef.current + 1) % items.length
+        : (currentRef.current - 1 + items.length) % items.length;
 
     setDirection(dir);
     setPhase("exit");
@@ -35,7 +39,6 @@ export default function GallerySection() {
       currentRef.current = nextIndex;
       setCurrent(nextIndex);
       setPhase("enter");
-
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setPhase("idle");
@@ -51,28 +54,23 @@ export default function GallerySection() {
   };
 
   useEffect(() => {
+    if (items.length <= 1) return;
     intervalRef.current = setInterval(() => advance(), 4500);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [items.length]);
 
   const handleNext = () => { resetInterval(); advance(undefined, "forward"); };
   const handlePrev = () => { resetInterval(); advance(undefined, "backward"); };
-
   const handleDotClick = (i: number) => {
     if (i === currentRef.current) return;
-    const dir = i > currentRef.current ? "forward" : "backward";
     resetInterval();
-    advance(i, dir);
+    advance(i, i > currentRef.current ? "forward" : "backward");
   };
 
-  const exitTransform =
-    direction === "forward" ? "translateX(-100%)" : "translateX(100%)";
-  const enterTransform =
-    direction === "forward" ? "translateX(100%)" : "translateX(-100%)";
-
-  const currentItem = galleryItems[current];
+  const exitTransform = direction === "forward" ? "translateX(-100%)" : "translateX(100%)";
+  const enterTransform = direction === "forward" ? "translateX(100%)" : "translateX(-100%)";
 
   const arrowBtnStyle: React.CSSProperties = {
     backgroundColor: "rgba(157,129,137,0.85)",
@@ -90,6 +88,10 @@ export default function GallerySection() {
     cursor: "pointer",
     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
   };
+
+  if (items.length === 0) return null;
+
+  const currentItem = items[current];
 
   return (
     <section
@@ -142,33 +144,38 @@ export default function GallerySection() {
             <p className="text-white font-semibold text-lg">{currentItem.label}</p>
           </div>
 
-          <button onClick={handlePrev} style={{ ...arrowBtnStyle, left: 16 }} aria-label="Previous">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-
-          <button onClick={handleNext} style={{ ...arrowBtnStyle, right: 16 }} aria-label="Next">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
+          {items.length > 1 && (
+            <>
+              <button onClick={handlePrev} style={{ ...arrowBtnStyle, left: 16 }} aria-label="Previous">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button onClick={handleNext} style={{ ...arrowBtnStyle, right: 16 }} aria-label="Next">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
 
-        <div className="flex justify-center gap-2 mt-6">
-          {galleryItems.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => handleDotClick(i)}
-              className="w-2 h-2 rounded-full"
-              style={{
-                backgroundColor: i === current ? "#9D8189" : "#F4ACB7",
-                transition: "background-color 300ms",
-              }}
-              aria-label={`Go to item ${i + 1}`}
-            />
-          ))}
-        </div>
+        {items.length > 1 && (
+          <div className="flex justify-center gap-2 mt-6">
+            {items.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => handleDotClick(i)}
+                className="w-2 h-2 rounded-full"
+                style={{
+                  backgroundColor: i === current ? "#9D8189" : "#F4ACB7",
+                  transition: "background-color 300ms",
+                }}
+                aria-label={`Go to item ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
