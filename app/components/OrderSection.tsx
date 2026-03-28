@@ -45,7 +45,7 @@ export default function OrderSection() {
           className="text-center text-base mb-10 opacity-80"
         >
           Fill out the form below to request a custom commission. I&apos;ll get back
-          to you as soon as possible!
+          to you along with your quotation as soon as possible!
         </p>
 
         {submitted ? (

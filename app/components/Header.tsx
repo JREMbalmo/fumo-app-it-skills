@@ -1,6 +1,6 @@
 "use client";
 
-const SITE_NAME = "Fumo Commissions";
+const SITE_NAME = "Shu Plush";
 
 const navLinks = [
   { label: "Home", href: "#home" },

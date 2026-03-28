@@ -32,9 +32,9 @@ export default function AboutSection() {
           style={{ color: "#9D8189" }}
           className="text-lg leading-relaxed mb-6"
         >
-          Here, you can order a <strong>fully custom fumo plush</strong> designed entirely
+          Here, you can order a <strong>fully custom fumo plush </strong> designed entirely
           around your vision. Whether it&apos;s your original character, a favorite fictional figure,
-          or a unique concept all your own — I bring it to life stitch by stitch.
+          or a unique concept all your own, I can bring it to life stitch by stitch.
         </p>
 
         <p

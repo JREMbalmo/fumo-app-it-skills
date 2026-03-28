@@ -1,5 +1,5 @@
-const DISCORD_USERNAME = "yourdiscord";
-const EMAIL = "your@email.com";
+const DISCORD_USERNAME = "jrebalmori";
+const EMAIL = "jrebalmori@addu.edu.ph";
 
 function DiscordIcon() {
   return (
